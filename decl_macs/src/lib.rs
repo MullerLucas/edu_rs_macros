@@ -6,3 +6,4 @@
 
 mod basics;
 mod recurrence;
+mod patterns;
