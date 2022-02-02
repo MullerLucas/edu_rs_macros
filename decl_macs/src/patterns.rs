@@ -86,3 +86,97 @@ macro_rules! foo {
         foo!(@as_expr $($tts)*)
     };
 }
+
+
+
+// ================================================================================================
+// Push-down Accumulation
+// ================================================================================================
+
+#[allow(unused_macros)]
+macro_rules! init_array {
+    (@accum (0, $_e:expr) -> ($($body:tt)*)) => { init_array!(@as_expr [$($body)*]) };
+    (@accum (1, $e:expr) ->  ($($body:tt)*)) => { init_array!(@accum (0, $e) -> ($($body)* $e,)) };
+    (@accum (2, $e:expr) ->  ($($body:tt)*)) => { init_array!(@accum (1, $e) -> ($($body)* $e,)) };
+    (@accum (3, $e:expr) ->  ($($body:tt)*)) => { init_array!(@accum (2, $e) -> ($($body)* $e,)) };
+    (@accum (4, $e:expr) ->  ($($body:tt)*)) => { init_array!(@accum (3, $e) -> ($($body)* $e,)) };
+
+    (@as_expr $e:expr) => { $e };
+    [$e:expr; $n:tt] => {
+        {
+            let e = $e;
+            init_array!(@accum ($n, e.clone()) -> ())
+        }
+    };
+}
+
+#[test]
+fn accum_test() {
+    let _strings: [String; 3] = init_array![String::from("hi"); 3];
+}
+
+
+
+// ================================================================================================
+// Repetition Replacement
+// ================================================================================================
+
+#[allow(unused_macros)]
+macro_rules! replace_expr {
+    ($_t:tt $sub:expr) => { $sub };
+}
+
+
+
+// ================================================================================================
+// TT Bundling
+// ================================================================================================
+
+#[allow(unused_macros)]
+macro_rules! call_a_or_b_on_tail {
+    ((a: $a:ident, b: $b:ident), call a: $($tail:tt)*) => {
+        $a(stringify!($($tail)*))
+    };
+
+    ((a: $a:ident, b: $b:ident), call b: $($tail:tt)*) => {
+        $b(stringify!($($tail)*))
+    };
+
+    ($ab:tt, $_skip:tt $($tail:tt)*) => {
+        call_a_or_b_on_tail!($ab, $($tail)*)
+    };
+}
+
+#[allow(dead_code)]
+fn compute_len(s: &str) -> Option<usize> {
+    Some(s.len())
+}
+
+#[allow(dead_code)]
+fn show_tail(s: &str) -> Option<usize> {
+    println!("tail: {:?}", s);
+    None
+}
+
+#[test]
+fn bundling_test() {
+    assert_eq!(
+        call_a_or_b_on_tail!(
+            (a: compute_len, b: show_tail),
+            the recursive part that skips over all these
+            tokens doesn t much care whether we will call a
+            or call b: only the terminal rules care.
+        ),
+        None
+    );
+    assert_eq!(
+        call_a_or_b_on_tail!(
+            (a: compute_len, b: show_tail),
+            and now, to justify the existence of two paths
+            we will also call a: its input should somehow
+            be self-referential, so let s make it return
+            some eighty-six!
+        ),
+        Some(92)
+    );
+}
