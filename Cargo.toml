@@ -1,5 +1,0 @@
-[workspace]
-
-members = [
-	"decl_macs",
-]
