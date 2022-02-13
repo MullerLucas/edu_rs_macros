@@ -31,7 +31,7 @@
 
 use derive_builder::Builder;
 
-#[derive(Builder)]
+#[derive(Debug, Builder)]
 pub struct Command {
     executable: String,
     #[builder(each = "arg")]
@@ -46,7 +46,6 @@ fn main() {
         .executable("cargo".to_owned())
         .arg("build".to_owned())
         .arg("--release".to_owned())
-        .env("MY_ENV".to_owned())
         .build()
         .unwrap();
 

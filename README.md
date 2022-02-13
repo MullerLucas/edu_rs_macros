@@ -9,5 +9,6 @@
 ## proc-macro-workshop
 
 - [dtolnay/proc-macro-workshop](https://github.com/dtolnay/proc-macro-workshop)
+- [wycats/proc-macro-workshop](https://github.com/wycats/proc-macro-workshop)
 
 ---
